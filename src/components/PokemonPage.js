@@ -5,6 +5,7 @@ import Search from './Search'
 import { Container } from 'semantic-ui-react'
 
 let frontBackOnOff = false
+let sortOnOff = false
 let filterOnOff = false
 let originalArray = []
 
@@ -12,7 +13,8 @@ class PokemonPage extends React.Component {
 
   
   state = {
-    pokemon : []
+    pokemon : [],
+    searchTerm : ''
     }
 
   componentDidMount() {
@@ -25,19 +27,58 @@ class PokemonPage extends React.Component {
          })
   }
 
-  handleFilter = (event) => {
-        
+  onChange = (event) => {
+    console.log('🤔')
+    console.log(event.target.name)
+    console.log(event.target.value)
+    console.log('🤔')
+    this.setState({[event.target.name]: event.target.value})
+  }
+
+  searchDataToSendDown = () => {
+        let lowerCaseTerm = this.state.searchTerm.toLowerCase()
+        let filteredArray = this.state.pokemon.filter((onePokemon) => {
+            return onePokemon.name.toLowerCase().includes(lowerCaseTerm)
+        })
+        return filteredArray
+  }
+
+  handleFilter = (event) => {  
         filterOnOff = !filterOnOff
         if (filterOnOff) {
             let workArray = this.state.pokemon.filter((item) => {
                   return item.stats[item.stats.length - 1].value > 60
             })
-            debugger
             this.setState({ pokemon : workArray })
         } else {
-            debugger
             this.setState({ pokemon : originalArray })
         }
+  }
+
+  handleSort = (event) => {  
+       sortOnOff = !sortOnOff
+       function compare(a, b) {
+          const hpA = a.stats[a.stats.length - 1].value
+          const hpB = b.stats[b.stats.length - 1].value
+          let comparison = 0
+        if (hpA > hpB) {
+          comparison = 1
+        } else if (hpA < hpB) {
+          comparison = -1
+        }
+        return comparison
+       }
+       if (sortOnOff) {
+           let sortedArray = [...this.state.pokemon]
+           sortedArray.sort(compare)
+           this.setState({
+                pokemon: sortedArray
+           })
+        } else {
+           this.setState({
+                pokemon: originalArray
+        })
+    }
   }
 
   changeImage = (event) => {
@@ -54,7 +95,39 @@ class PokemonPage extends React.Component {
         }
     })
     this.setState({ pokemon : workArray })
-}
+  }
+
+  addNewPokemon = (newPokemon) => {
+      const stats = [{'value': newPokemon.hp,
+                      'name': 'hp'
+                    }]
+      const sprites = {
+        "front": newPokemon.frontUrl,
+        "back": newPokemon.backUrl
+                      }
+      const pokemonToAdd = {
+            name: newPokemon.name,
+            sprites: sprites,
+            stats: stats
+                           }
+    fetch('http://localhost:3000/pokemon', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'},
+          body: JSON.stringify(pokemonToAdd)
+        })
+     .then(response => response.json())
+     .then(addedPokemonData => {
+           console.log(addedPokemonData)
+           addedPokemonData["frontOrBack"] = true
+           originalArray.push(addedPokemonData)
+           this.setState({ pokemon : originalArray })
+         })
+  }
+
+  
+
+
 
 
   render() {
@@ -62,20 +135,24 @@ class PokemonPage extends React.Component {
       <Container>
         <h1>Pokemon Searcher</h1>
         <br />
-        <PokemonForm />
+        <PokemonForm addNewPokemon={this.addNewPokemon}/>
         <br />
-        <Search onChange={() => console.log('🤔')} />
+        <Search onChange={this.onChange} />
         <br />
-        <div className="ui right labeled button" tabIndex="0" onClick={this.handleFilter}>
-          <div className="ui button">
-            <i className="filter icon"></i> Filter
+        <div className="ui animated fade button" tabIndex="0" onClick={this.handleFilter}>
+          <div className="visible content">The Stronger Pokemon!</div>
+          <div className="hidden content">
+            <i className="filter icon"></i> Pokemon With hp > 60
           </div>
-          <a className="ui basic left pointing label">
-            Get The Pokemon with hp > 60
-          </a>
+        </div>
+        <div className="ui animated fade button" tabIndex="0" onClick={this.handleSort}>
+          <div className="visible content">Sort The Pokemon!</div>
+          <div className="hidden content">
+            <i className="sort icon"></i> Sort Based On hp
+          </div>
         </div>
         <h2> </h2>
-        <PokemonCollection pokemonData={this.state.pokemon}
+        <PokemonCollection pokemonData={this.searchDataToSendDown()}
                            changeImage={this.changeImage}
                                       />
       </Container>

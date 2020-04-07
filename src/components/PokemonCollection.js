@@ -1,5 +1,6 @@
 import React from 'react'
 import PokemonCard from './PokemonCard'
+import PokemonContainer from './PokemonContainer'
 import { Card } from 'semantic-ui-react'
 
 class PokemonCollection extends React.Component {
@@ -7,11 +8,11 @@ class PokemonCollection extends React.Component {
   
 
   render() {
-    
+    const workArray = this.props.pokemonData
   
     return (
       <Card.Group itemsPerRow={6}>
-      {this.props.pokemonData.map((onePokemon) => {        
+      {workArray.map((onePokemon) => {        
                         return (
                               <PokemonCard pokemon={onePokemon}
                                            key={onePokemon.id}

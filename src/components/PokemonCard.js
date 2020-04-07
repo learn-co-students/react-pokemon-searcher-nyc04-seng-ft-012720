@@ -1,16 +1,8 @@
 import React from 'react'
 import { Card } from 'semantic-ui-react'
 
-
-
-
-
 class PokemonCard extends React.Component {
   
-
-
-
-
   switchImage = (event) => {
              console.log(event.target.parentElement.dataset.id)
              this.props.changeImage(event)
